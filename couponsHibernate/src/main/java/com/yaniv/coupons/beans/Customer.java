@@ -5,6 +5,8 @@ public class Customer {
 	private String customerName;
 	private String customerPassword;
 	private String customerEmail;
+	
+	
 
 	public Customer() {
 		super();

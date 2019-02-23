@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import com.yaniv.coupons.enums.CouponType;
@@ -44,6 +45,9 @@ public class CouponEntity {
 	@Column(name="COMPANY_ID", nullable=false)
 	private long companyId;
 
+	@ManyToOne
+	private CompanyEntity company;
+	
 	public CouponEntity() {
 		super();
 	}
