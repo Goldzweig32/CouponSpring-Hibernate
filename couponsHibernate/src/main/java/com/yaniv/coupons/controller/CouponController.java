@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import com.yaniv.coupons.beans.Coupon;
+import com.yaniv.coupons.beans.CouponEntity;
 import com.yaniv.coupons.dao.CouponDao;
 import com.yaniv.coupons.enums.CouponType;
 import com.yaniv.coupons.enums.ErrorType;
@@ -20,7 +21,7 @@ public class CouponController {
 	@Autowired
 	private CouponDao couponDao;
 
-	public void createCoupon(Coupon coupon) throws ApplicationException {
+	public void createCoupon(CouponEntity coupon) throws ApplicationException {
 		// We validate the creation of a new coupon
 		validateCreateCoupon(coupon);
 
@@ -28,7 +29,7 @@ public class CouponController {
 		this.couponDao.createCoupon(coupon);
 	}
 
-	public Coupon getCoupon(long couponId) throws ApplicationException {
+	public CouponEntity getCoupon(long couponId) throws ApplicationException {
 
 		if (!couponDao.isCouponExist(couponId)) {
 			throw new ApplicationException(ErrorType.COUPON_ID_DOES_NOT_EXIST,
@@ -52,7 +53,7 @@ public class CouponController {
 		couponDao.deleteCoupon(couponId);
 	}
 
-	public void updateCoupon(Coupon coupon) throws ApplicationException {
+	public void updateCoupon(CouponEntity coupon) throws ApplicationException {
 
 		if (!couponDao.isCouponExist(coupon.getCouponId())) {
 			throw new ApplicationException(ErrorType.COUPON_ID_DOES_NOT_EXIST,
@@ -64,37 +65,37 @@ public class CouponController {
 		couponDao.updateCoupon(coupon);
 	}
 
-	public List<Coupon> getAllCoupons() throws ApplicationException {
-		List<Coupon> coupons = couponDao.getCoupons();
+	public List<CouponEntity> getAllCoupons() throws ApplicationException {
+		List<CouponEntity> coupons = couponDao.getCoupons();
 		return coupons;
 	}
 
-	public List<Coupon> getCouponsByType(CouponType couponType) throws ApplicationException {
-		List<Coupon> coupons = couponDao.getCouponsByType(couponType);
+	public List<CouponEntity> getCouponsByType(CouponType couponType) throws ApplicationException {
+		List<CouponEntity> coupons = couponDao.getCouponsByType(couponType);
 		return coupons;
 	}
 
-	public List<Coupon> getCouponsUpToPrice(double price) throws ApplicationException {
-		List<Coupon> coupons = couponDao.getCouponsUpToPrice(price);
+	public List<CouponEntity> getCouponsUpToPrice(double price) throws ApplicationException {
+		List<CouponEntity> coupons = couponDao.getCouponsUpToPrice(price);
 		return coupons;
 	}
 
-	public List<Coupon> getCouponsUpToDate(String couponEndDate) throws ApplicationException {
-		List<Coupon> coupons = couponDao.getCouponUpToDate(couponEndDate);
+	public List<CouponEntity> getCouponsUpToDate(String couponEndDate) throws ApplicationException {
+		List<CouponEntity> coupons = couponDao.getCouponUpToDate(couponEndDate);
 		return coupons;
 	}
 
-	public List<Coupon> getCouponsByCustomerId(long customerId) throws ApplicationException {
-		List<Coupon> coupons = couponDao.getCouponsByCustomerId(customerId);
+	public List<CouponEntity> getCouponsByCustomerId(long customerId) throws ApplicationException {
+		List<CouponEntity> coupons = couponDao.getCouponsByCustomerId(customerId);
 		return coupons;
 	}
 	
-	public List<Coupon> getCouponsByCompany(long companyId) throws ApplicationException {
-		List<Coupon> coupons = couponDao.getCouponsByCompany(companyId);
+	public List<CouponEntity> getCouponsByCompany(long companyId) throws ApplicationException {
+		List<CouponEntity> coupons = couponDao.getCouponsByCompany(companyId);
 		return coupons;
 	}
 
-	private void validateCreateCoupon(Coupon coupon) throws ApplicationException {
+	private void validateCreateCoupon(CouponEntity coupon) throws ApplicationException {
 		// We check if the coupon's name is already exist in the DB
 		if (this.couponDao.isCouponExistByTitle(coupon.getCouponTitle())) {
 			throw new ApplicationException(ErrorType.NAME_IS_ALREADY_EXISTS,
@@ -105,7 +106,7 @@ public class CouponController {
 	}
 
 	public void purchaseCoupon(long customerId, long couponId) throws ApplicationException {
-		Coupon coupon = couponDao.getCoupon(couponId);
+		CouponEntity coupon = couponDao.getCoupon(couponId);
 		long couponAmount = coupon.getAmount();
 		if (couponAmount > 0) {
 			coupon.setAmount(couponAmount - 1);
