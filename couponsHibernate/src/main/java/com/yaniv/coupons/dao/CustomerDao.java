@@ -88,7 +88,7 @@ public class CustomerDao {
 
 		try {
 
-			Query getCustomersQuery = entityManager.createQuery("SELECT * FROM customer");
+			Query getCustomersQuery = entityManager.createNativeQuery("SELECT * FROM customer");
 			return getCustomersQuery.getResultList();
 
 		} catch (NoResultException e) {
@@ -105,7 +105,7 @@ public class CustomerDao {
 
 
 		try {
-			Query loginQuery = entityManager.createQuery("SELECT ID FROM customer WHERE EMAIL =: customerEmail AND PASSWORD =: customerPassword");
+			Query loginQuery = entityManager.createNativeQuery("SELECT ID FROM customer WHERE EMAIL =: customerEmail AND PASSWORD =:customerPassword");
 			loginQuery.setParameter("customerEmail", customerEmail);
 			loginQuery.setParameter("customerPassword", password);
 
@@ -125,7 +125,7 @@ public class CustomerDao {
 	public boolean isCustomerExistByEmail(String customerEmail) throws ApplicationException {
 		
 		try {
-			Query existQuery = entityManager.createQuery("SELECT ID FROM customer WHERE EMAIL =: customerEmail");
+			Query existQuery = entityManager.createNativeQuery("SELECT ID FROM customer WHERE EMAIL =:customerEmail");
 			existQuery.setParameter("customerEmail", customerEmail);
 			CustomerEntity customer = (CustomerEntity) existQuery.getSingleResult();
 			if (customer == null) {
@@ -145,7 +145,7 @@ public class CustomerDao {
 	public boolean isCustomerExist(Long customerId) throws ApplicationException {
 		
 		try {
-			Query existQuery = entityManager.createQuery("SELECT ID FROM customer WHERE ID =: customerId");
+			Query existQuery = entityManager.createNativeQuery("SELECT ID FROM customer WHERE ID =:customerId");
 			existQuery.setParameter("customerId", customerId);
 			CustomerEntity customer = (CustomerEntity) existQuery.getSingleResult();
 			if (customer == null) {

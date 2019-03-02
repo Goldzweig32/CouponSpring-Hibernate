@@ -2,8 +2,11 @@ package com.yaniv.coupons.beans;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -30,6 +33,7 @@ public class CouponEntity {
 	@Column(name="AMOUNT", nullable=false)
 	private long amount;
 	
+	@Enumerated(EnumType.STRING)
 	@Column(name="COUPON_TYPE", nullable=false)
 	private CouponType couponType;
 	
@@ -46,6 +50,7 @@ public class CouponEntity {
 	private long companyId;
 
 	@ManyToOne
+	@JoinColumn(name = "companyId" , nullable=true)
 	private CompanyEntity company;
 	
 	public CouponEntity() {

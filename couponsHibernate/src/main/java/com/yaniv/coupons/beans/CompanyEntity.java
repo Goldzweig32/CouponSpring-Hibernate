@@ -4,6 +4,8 @@ package com.yaniv.coupons.beans;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -28,6 +30,7 @@ public class CompanyEntity {
 	@Column(name="EMAIL", nullable=false)
 	private String companyEmail;
 	
+	@Enumerated(EnumType.STRING)
 	@Column(name="COMPANY_STATUS", nullable=false)
 	private CompanyStatus companyStatus;
 

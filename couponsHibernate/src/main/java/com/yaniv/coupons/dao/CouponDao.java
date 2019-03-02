@@ -64,7 +64,7 @@ public class CouponDao {
 
 
 		try {
-			Query deleteFromCustomerCoupon = entityManager.createQuery("DELETE FROM customer_coupon WHERE COUPON_ID =: couponId");
+			Query deleteFromCustomerCoupon = entityManager.createNativeQuery("DELETE FROM customer_coupon WHERE COUPON_ID =:couponId");
 			deleteFromCustomerCoupon.setParameter("couponId", couponId);
 
 			deleteFromCustomerCoupon.executeUpdate();
@@ -83,7 +83,7 @@ public class CouponDao {
 
 		try {
 
-			Query deleteFromCoustomerCouponByCustomer = entityManager.createQuery("DELETE FROM customer_coupon WHERE CUSTOMER_ID =: customerId");
+			Query deleteFromCoustomerCouponByCustomer = entityManager.createNativeQuery("DELETE FROM customer_coupon WHERE CUSTOMER_ID =:customerId");
 			deleteFromCoustomerCouponByCustomer.setParameter("customerId", customerId);
 
 			deleteFromCoustomerCouponByCustomer.executeUpdate();
@@ -133,9 +133,10 @@ public class CouponDao {
 
 		try {
 
-			Query getCouponsQuery = entityManager.createQuery("SELECT * FROM coupon");
-			return getCouponsQuery.getResultList();
-
+			Query getCouponsQuery = entityManager.createNativeQuery("SELECT * FROM coupon");
+			List<CouponEntity> coupons = getCouponsQuery.getResultList();
+			return coupons;
+			
 		} catch (NoResultException e) {
 			return null;
 
@@ -150,7 +151,7 @@ public class CouponDao {
 
 		try {
 
-			Query getCouponsByTypeQ = entityManager.createQuery("SELECT * FROM coupon WHERE COUPON_TYPE =: couponType");
+			Query getCouponsByTypeQ = entityManager.createNativeQuery("SELECT * FROM coupon WHERE COUPON_TYPE =:couponType");
 			getCouponsByTypeQ.setParameter("couponType", couponType);
 			return getCouponsByTypeQ.getResultList();
 
@@ -168,7 +169,7 @@ public class CouponDao {
 
 		try {
 
-			Query getCouponsUpToPriceQ = entityManager.createQuery("SELECT * FROM coupon WHERE COUPON_PRICE <=: couponPrice");
+			Query getCouponsUpToPriceQ = entityManager.createNativeQuery("SELECT * FROM coupon WHERE COUPON_PRICE <=:couponPrice");
 			getCouponsUpToPriceQ.setParameter("couponPrice", price);
 
 			return getCouponsUpToPriceQ.getResultList();
@@ -188,7 +189,7 @@ public class CouponDao {
 
 		try {
 
-			Query getCouponUpToDateQ = entityManager.createQuery("SELECT * FROM coupon WHERE END_DATE <=: couponEndDate");
+			Query getCouponUpToDateQ = entityManager.createNativeQuery("SELECT * FROM coupon WHERE END_DATE <=:couponEndDate");
 			getCouponUpToDateQ.setParameter("couponEndDate", couponEndDate);
 
 			return getCouponUpToDateQ.getResultList();
@@ -207,9 +208,9 @@ public class CouponDao {
 
 		try {
 
-			Query getCouponsByCustomerIdQ = entityManager.createQuery("SELECT ID,COUPON_TITLE,START_DATE,END_DATE,AMOUNT,COUPON_TYPE,COUPON_MESSAGE,COUPON_PRICE,COUPON_IMAGE,COMPANY_ID "
+			Query getCouponsByCustomerIdQ = entityManager.createNativeQuery("SELECT ID,COUPON_TITLE,START_DATE,END_DATE,AMOUNT,COUPON_TYPE,COUPON_MESSAGE,COUPON_PRICE,COUPON_IMAGE,COMPANY_ID "
 					+ " FROM coupon c inner" + " JOIN customer_coupon cc on c.ID = cc.COUPON_ID "
-					+ " WHERE cc.CUSTOMER_ID =: customerIdd ");
+					+ " WHERE cc.CUSTOMER_ID =:customerIdd ");
 			getCouponsByCustomerIdQ.setParameter("customerIdd", customerId);
 
 			return getCouponsByCustomerIdQ.getResultList();
@@ -228,9 +229,9 @@ public class CouponDao {
 
 		try {
 
-			Query getCouponsByCompanyQ = entityManager.createQuery("SELECT ID,COUPON_TITLE,START_DATE,END_DATE,AMOUNT,COUPON_TYPE,COUPON_MESSAGE,COUPON_PRICE,COUPON_IMAGE,COMPANY_ID "
+			Query getCouponsByCompanyQ = entityManager.createNativeQuery("SELECT ID,COUPON_TITLE,START_DATE,END_DATE,AMOUNT,COUPON_TYPE,COUPON_MESSAGE,COUPON_PRICE,COUPON_IMAGE,COMPANY_ID "
 					+ " FROM coupon"
-					+ " WHERE COMPANY_ID =: companyIdd");
+					+ " WHERE COMPANY_ID =:companyIdd");
 			getCouponsByCompanyQ.setParameter("companyIdd", companyId);
 
 			return getCouponsByCompanyQ.getResultList();
@@ -249,7 +250,7 @@ public class CouponDao {
 
 		try {
 
-			Query isCouponExistByTitleQ = entityManager.createQuery("SELECT ID FROM coupon WHERE COUPON_TITLE =: couponTitle");
+			Query isCouponExistByTitleQ = entityManager.createNativeQuery("SELECT ID FROM coupon WHERE COUPON_TITLE =:couponTitle");
 			isCouponExistByTitleQ.setParameter("couponTitle", couponTitle);
 
 			CouponEntity coupon = (CouponEntity)isCouponExistByTitleQ.getSingleResult();
@@ -267,7 +268,7 @@ public class CouponDao {
 	}
 	
 	@Transactional(propagation=Propagation.REQUIRED)
-	public boolean isCouponExist(long couponId) throws ApplicationException {
+	public boolean isCouponExist(Long couponId) throws ApplicationException {
 
 		try {
 			CouponEntity coupon = entityManager.find(CouponEntity.class, couponId);
@@ -291,8 +292,8 @@ public class CouponDao {
 
 		try {
 			
-			Query deleteExpiredCouponsQ = entityManager.createQuery("DELETE FROM customer_coupon WHERE COUPON_ID IN (SELECT ID FROM coupon WHERE END_DATE <: endDate1);"
-					+ "DELETE FROM coupon WHERE ID IN (SELECT ID FROM coupon WHERE END_DATE <: endDate2)");
+			Query deleteExpiredCouponsQ = entityManager.createNativeQuery("DELETE FROM customer_coupon WHERE COUPON_ID IN (SELECT ID FROM coupon WHERE END_DATE <:endDate1);"
+					+ "DELETE FROM coupon WHERE ID IN (SELECT ID FROM coupon WHERE END_DATE <:endDate2)");
 			deleteExpiredCouponsQ.setParameter("endDate1", DateUtils.getCurrentDate());
 			deleteExpiredCouponsQ.setParameter("endDate2", DateUtils.getCurrentDate());
 			
