@@ -96,6 +96,6 @@ public class CompanyEntity {
 	@Override
 	public String toString() {
 		return "\n [Company id : " + companyId + ", Company name : " + companyName + ", Company password : "
-				+ companyPassword + ", Company email : " + companyEmail + "]";
+				+ companyPassword + ", Company email : " + companyEmail + ",status" + companyStatus + "]";
 	}
 }

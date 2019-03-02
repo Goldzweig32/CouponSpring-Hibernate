@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import com.yaniv.coupons.beans.CompanyEntity;
+import com.yaniv.coupons.enums.CompanyStatus;
 import com.yaniv.coupons.enums.ErrorType;
 import com.yaniv.coupons.exceptions.ApplicationException;
 
@@ -28,7 +29,8 @@ public class CompanyDao {
 	public void registerCompany(CompanyEntity company) throws ApplicationException {
 
 		try {
-				 entityManager.persist(company);
+				company.setCompanyStatus("active");
+				entityManager.persist(company);
 		}
 
 		catch (Exception e) {

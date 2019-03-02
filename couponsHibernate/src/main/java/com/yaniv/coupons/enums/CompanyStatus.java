@@ -1,8 +1,6 @@
 package com.yaniv.coupons.enums;
 
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
 public enum CompanyStatus {
 	ACTIVE("active"), DEACTIVATE("deactivate");
 
