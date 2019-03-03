@@ -34,7 +34,7 @@ public class CompanyController {
 	}
 
 
-	public CompanyEntity getCompany(long companyId) throws ApplicationException {
+	public CompanyEntity getCompany(Long companyId) throws ApplicationException {
 
 		if (!companyDao.isCompanyExist(companyId)) {
 			throw new ApplicationException(ErrorType.COMPANY_DOES_NOT_EXIST,

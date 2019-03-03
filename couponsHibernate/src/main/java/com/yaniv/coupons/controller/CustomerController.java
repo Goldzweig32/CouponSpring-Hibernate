@@ -36,7 +36,7 @@ public class CustomerController {
 		this.customerDao.registerCustomer(customer);
 	}
 
-	public CustomerEntity getCustomerByCustomerId(long customerId) throws ApplicationException {
+	public CustomerEntity getCustomerByCustomerId(Long customerId) throws ApplicationException {
 		if (!customerDao.isCustomerExist(customerId)) {
 			throw new ApplicationException(ErrorType.CUSTOMER_DOES_NOT_EXIST,
 					DateUtils.getCurrentDateAndTime() + " Get customer by customer id has failed."

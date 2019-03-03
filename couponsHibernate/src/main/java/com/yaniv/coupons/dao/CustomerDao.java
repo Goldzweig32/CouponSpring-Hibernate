@@ -88,7 +88,7 @@ public class CustomerDao {
 
 		try {
 
-			Query getCustomersQuery = entityManager.createNativeQuery("SELECT * FROM customer");
+			Query getCustomersQuery = entityManager.createQuery("SELECT * FROM customer");
 			return getCustomersQuery.getResultList();
 
 		} catch (NoResultException e) {
@@ -105,7 +105,7 @@ public class CustomerDao {
 
 
 		try {
-			Query loginQuery = entityManager.createNativeQuery("SELECT ID FROM customer WHERE EMAIL =: customerEmail AND PASSWORD =:customerPassword");
+			Query loginQuery = entityManager.createQuery("SELECT ID FROM customer WHERE EMAIL =: customerEmail AND PASSWORD =:customerPassword");
 			loginQuery.setParameter("customerEmail", customerEmail);
 			loginQuery.setParameter("customerPassword", password);
 
@@ -125,15 +125,13 @@ public class CustomerDao {
 	public boolean isCustomerExistByEmail(String customerEmail) throws ApplicationException {
 		
 		try {
-			Query existQuery = entityManager.createNativeQuery("SELECT ID FROM customer WHERE EMAIL =:customerEmail");
+			Query existQuery = entityManager.createQuery("SELECT ID FROM customer WHERE EMAIL =:customerEmail");
 			existQuery.setParameter("customerEmail", customerEmail);
 			CustomerEntity customer = (CustomerEntity) existQuery.getSingleResult();
 			if (customer == null) {
 				return false;
 			}else return true;
 				
-		} catch (NoResultException e) {
-			return false;
 		} catch (Exception e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,"Error in CustomerDao, isCustomerExistByEmail(); FAILED");
 		}
@@ -144,16 +142,15 @@ public class CustomerDao {
 	@Transactional(propagation=Propagation.REQUIRED)
 	public boolean isCustomerExist(Long customerId) throws ApplicationException {
 		
+		CustomerEntity customer = null;
+		
 		try {
-			Query existQuery = entityManager.createNativeQuery("SELECT ID FROM customer WHERE ID =:customerId");
-			existQuery.setParameter("customerId", customerId);
-			CustomerEntity customer = (CustomerEntity) existQuery.getSingleResult();
+			
+			customer = entityManager.find(CustomerEntity.class, customerId);
 			if (customer == null) {
 				return false;
 			}else return true;
 				
-		} catch (NoResultException e) {
-			return false;
 		} catch (Exception e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CustomerDao, isCustomerExistById(); FAILED");

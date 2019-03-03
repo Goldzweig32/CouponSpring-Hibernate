@@ -41,7 +41,7 @@ public class CompanyDao {
 	
 	
 	@Transactional(propagation=Propagation.REQUIRED)
-	public CompanyEntity getCompany(long companyId) throws ApplicationException {
+	public CompanyEntity getCompany(Long companyId) throws ApplicationException {
 
 
 		try {
@@ -63,7 +63,7 @@ public class CompanyDao {
 		try {
 			
 			String deactivate = "deactivate";
-			Query query = entityManager.createNativeQuery("UPDATE company SET COMPANY_STATUS =:companyStatus WHERE ID =:companyId");
+			Query query = entityManager.createQuery("UPDATE company SET COMPANY_STATUS =:companyStatus WHERE ID =:companyId");
 			query.setParameter("companyStatus", deactivate);
 			query.setParameter("companyId", companyId);
 
@@ -97,7 +97,7 @@ public class CompanyDao {
 
 		try {
 			
-			Query getCompaniesQuery = entityManager.createNativeQuery("SELECT * FROM company");
+			Query getCompaniesQuery = entityManager.createQuery("SELECT * FROM company");
 			return getCompaniesQuery.getResultList();
 		
 		} catch (NoResultException e) {
@@ -114,7 +114,7 @@ public class CompanyDao {
 		
 		try {
 			String status = "active";
-			Query loginQuery = entityManager.createNativeQuery("SELECT ID FROM company WHERE EMAIL =:companyEmail  AND PASSWORD =:companyPassword AND COMPANY_STATUS =:companyStatus");
+			Query loginQuery = entityManager.createQuery("SELECT ID FROM company WHERE EMAIL =:companyEmail  AND PASSWORD =:companyPassword AND COMPANY_STATUS =:companyStatus");
 			loginQuery.setParameter("companyEmail", email);
 			loginQuery.setParameter("companyPassword", password);
 			loginQuery.setParameter("companyStatus", status);
@@ -136,7 +136,7 @@ public class CompanyDao {
 		
 
 		try {
-			Query existQuery = entityManager.createNativeQuery("SELECT ID FROM company WHERE EMAIL =:companyEmail");
+			Query existQuery = entityManager.createQuery("SELECT ID FROM company WHERE EMAIL =:companyEmail");
 			existQuery.setParameter("companyEmail", companyEmail);
 			CompanyEntity company = (CompanyEntity) existQuery.getSingleResult();
 			if (company == null) {
@@ -156,16 +156,15 @@ public class CompanyDao {
 	@Transactional(propagation=Propagation.REQUIRED)
 	public boolean isCompanyExist(Long companyId) throws ApplicationException {
 		
+		CompanyEntity company = null;
+		
 		try {
-			Query existQuery = entityManager.createNativeQuery("SELECT ID FROM company WHERE ID =:companyId");
-			existQuery.setParameter("companyId", companyId);
-			CompanyEntity company = (CompanyEntity) existQuery.getSingleResult();
+			 company = entityManager.find(CompanyEntity.class, companyId);
+			 
 			if (company == null) {
 				return false;
 			}else return true;
 				
-		} catch (NoResultException e) {
-			return false;
 		} catch (Exception e) {
 			// logger.error("Error in CompanyDao, isCompanyExistById(); FAILED");
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,

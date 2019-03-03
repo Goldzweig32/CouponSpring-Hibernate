@@ -32,7 +32,7 @@ public class CouponApi {
 	private CouponController couponController;
 
 	@PostMapping
-	public void createCoupon(@RequestBody CouponEntity coupon) throws ApplicationException {
+	public void createCoupon(@RequestBody Coupon coupon) throws ApplicationException {
 		this.couponController.createCoupon(coupon);
 	}
 
@@ -51,51 +51,51 @@ public class CouponApi {
 	}
 
 	@PutMapping
-	public void updateCoupon(@RequestBody CouponEntity coupon) throws ApplicationException {
+	public void updateCoupon(@RequestBody Coupon coupon) throws ApplicationException {
 		this.couponController.updateCoupon(coupon);
 	}
 
 	@GetMapping
-	public List<CouponEntity> getCoupons() throws ApplicationException {
+	public List<Coupon> getCoupons() throws ApplicationException {
 		return this.couponController.getAllCoupons();
 	}
 
 	@GetMapping
 	@RequestMapping("/showCoupon/{couponId}")
-	public CouponEntity getCoupon(@PathVariable("couponId") long couponId) throws ApplicationException {
+	public Coupon getCoupon(@PathVariable("couponId") long couponId) throws ApplicationException {
 		return this.couponController.getCoupon(couponId);
 	}
 
 	@GetMapping
 	@RequestMapping("/showCouponsByType/{couponType}")
-	public List<CouponEntity> getCouponsByType(@PathVariable("couponType") CouponType couponType)
+	public List<Coupon> getCouponsByType(@PathVariable("couponType") CouponType couponType)
 			throws ApplicationException {
 		return this.couponController.getCouponsByType(couponType);
 	}
 
 	@GetMapping
 	@RequestMapping("/showCouponsUpToPrice/{price}")
-	public List<CouponEntity> getCouponsUpToPrice(@PathVariable("price") double price) throws ApplicationException {
+	public List<Coupon> getCouponsUpToPrice(@PathVariable("price") double price) throws ApplicationException {
 		return this.couponController.getCouponsUpToPrice(price);
 	}
 
 	@GetMapping
 	@RequestMapping("/showCouponsUpToDate/{couponEndDate}")
-	public List<CouponEntity> getCouponsUpToDate(@PathVariable("couponEndDate") String couponEndDate)
+	public List<Coupon> getCouponsUpToDate(@PathVariable("couponEndDate") String couponEndDate)
 			throws ApplicationException {
 		return this.couponController.getCouponsUpToDate(couponEndDate);
 	}
 
 	@GetMapping
 	@RequestMapping("/showCouponsByCustomer/{customerId}")
-	public List<CouponEntity> getCouponsByCustomerId(@PathVariable("customerId") long customerId)
+	public List<Coupon> getCouponsByCustomerId(@PathVariable("customerId") long customerId)
 			throws ApplicationException {
 		return this.couponController.getCouponsByCustomerId(customerId);
 	}
 	
 	@GetMapping
 	@RequestMapping("/showCouponsByCompany/{companyId}")
-	public List<CouponEntity> getCouponsByCompany(@PathVariable("companyId") long companyId)
+	public List<Coupon> getCouponsByCompany(@PathVariable("companyId") long companyId)
 			throws ApplicationException {
 		return this.couponController.getCouponsByCompany(companyId);
 	}

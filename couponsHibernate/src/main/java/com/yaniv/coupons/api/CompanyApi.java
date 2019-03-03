@@ -51,7 +51,7 @@ public class CompanyApi {
 
 	@DeleteMapping
 	@RequestMapping("/{companyId}")
-	public void deactivateCompany(@PathVariable("companyId") long companyId) throws ApplicationException {
+	public void deactivateCompany(@PathVariable("companyId") Long companyId) throws ApplicationException {
 		this.companyController.deactivateCompany(companyId);
 	}
 
@@ -69,7 +69,7 @@ public class CompanyApi {
 
 	@GetMapping
 	@RequestMapping("/showCompany/{companyId}")
-	public CompanyEntity getCompany(@PathVariable("companyId") long companyId) throws ApplicationException {
+	public CompanyEntity getCompany(@PathVariable("companyId") Long companyId) throws ApplicationException {
 		return this.companyController.getCompany(companyId);
 	}
 }

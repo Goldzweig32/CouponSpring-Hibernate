@@ -17,9 +17,7 @@ public class JdbcUtils {
 	}
 
 	public static Connection getConnection() throws SQLException {
-		Connection connection = DriverManager.getConnection(
-				"jdbc:mysql://localhost:3306/coupons?autoReconnect=true&useSSL=false&serverTimezone=UTC", "root",
-				"Yaniv12345");
+		Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/couponshibernate?autoReconnect=true&useSSL=false&serverTimezone=UTC", "root", "Yaniv12345");
 		return connection;
 	}
 

@@ -47,9 +47,11 @@ public class CouponEntity {
 	@Column(name="COUPON_IMAGE", nullable=false)
 	private String couponImage;
 
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "COMPANY_ID" , nullable=false)
-	private CompanyEntity companyId;
+	@Column(name="COMPANY_ID", nullable=false)
+	private long companyId;
+	
+	@ManyToOne
+	private CompanyEntity company;
 	
 	public CouponEntity() {
 		super();
@@ -94,7 +96,7 @@ public class CouponEntity {
 		this.couponMessage = couponMessage;
 		this.couponPrice = couponPrice;
 		this.couponImage = couponImage;
-		this.companyId.setCompanyId(companyId);
+		this.companyId = companyId;
 	}
 
 	public Long getCouponId() {
@@ -170,11 +172,11 @@ public class CouponEntity {
 	}
 
 	public Long getCompanyId() {
-		return this.companyId.getCompanyId();
+		return this.companyId;
 	}
 
 	public void setCompanyId(Long companyId) {
-		this.companyId.setCompanyId(companyId);
+		this.companyId = companyId;
 	}
 
 	@Override

@@ -7,18 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.yaniv.coupons.beans.Coupon;
-import com.yaniv.coupons.beans.CouponEntity;
-import com.yaniv.coupons.beans.CustomerCouponEntity;
 import com.yaniv.coupons.enums.CouponType;
 import com.yaniv.coupons.enums.ErrorType;
 import com.yaniv.coupons.exceptions.ApplicationException;
@@ -26,304 +17,593 @@ import com.yaniv.coupons.utils.DateUtils;
 import com.yaniv.coupons.utils.JdbcUtils;
 
 @Repository
-public class CouponDao {
+public class CouponDao{
 
-	@PersistenceContext(unitName="couponHibernate")
-	private EntityManager entityManager;
+	public long createCoupon(Coupon coupon) throws ApplicationException {
 
-	@Transactional(propagation=Propagation.REQUIRED)
-	public void createCoupon(CouponEntity coupon) throws ApplicationException {
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
 
 		try {
-			entityManager.persist(coupon);
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
+
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "insert into coupon (COUPON_TITLE, START_DATE, END_DATE, AMOUNT, COUPON_TYPE, COUPON_MESSAGE, COUPON_PRICE, COUPON_IMAGE, COMPANY_ID) values (?,?,?,?,?,?,?,?,?)";
+
+			preparedStatement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+
+			preparedStatement.setString(1, coupon.getCouponTitle());
+			preparedStatement.setString(2, coupon.getStartDate());
+			preparedStatement.setString(3, coupon.getEndDate());
+			preparedStatement.setLong(4, coupon.getAmount());
+			preparedStatement.setString(5, coupon.getCouponType());
+			preparedStatement.setString(6, coupon.getCouponMessage());
+			preparedStatement.setLong(7, coupon.getCouponPrice());
+			preparedStatement.setString(8, coupon.getCouponImage());
+			preparedStatement.setLong(9, coupon.getCompanyId());
+
+			preparedStatement.executeUpdate();
+
+			ResultSet resultSet = preparedStatement.getGeneratedKeys();
+			resultSet.next();
+			long couponId = resultSet.getLong(1);
+			return couponId;
 		}
 
-		catch (Exception e) {
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR, "Error in CouponDao, creatCoupon(); FAILED");
 		}
+
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+
 	}
 
-	public CouponEntity getCoupon(long couponId) throws ApplicationException {
+	public Coupon getCoupon(long couponId) throws ApplicationException {
+
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		Coupon coupon = null;
 
 		try {
-			return entityManager.find(CouponEntity.class, couponId);
+			connection = JdbcUtils.getConnection();
+			String sql = "SELECT * FROM coupon WHERE ID = ? ";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, couponId);
+			resultSet = preparedStatement.executeQuery();
+			if (!resultSet.next()) {
+				return null;
+			}
+			coupon = extractCouponFromResultSet(resultSet);
 
-		} catch (NoResultException e) {
-			throw new ApplicationException(e, ErrorType.COUPON_ID_DOES_NOT_EXIST,
-					"Error in CouponDao, getCoupon(); FAILED");
-		} catch (Exception e) {
-			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
-					"Error in CouponDao, getCoupon(); FAILED");
 		}
+
+		catch (SQLException e) {
+			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
+					"Error in CouponDao, getCouponByCouponId(); FAILED");
+		}
+
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+		return coupon;
 	}
 
+	private Coupon extractCouponFromResultSet(ResultSet resultSet) throws SQLException {
 
-	@Transactional(propagation=Propagation.REQUIRED)
+		// Extract coupon's data by parameters from the database
+		Coupon coupon = new Coupon();
+		coupon.setCouponId(resultSet.getLong("ID"));
+		coupon.setCouponTitle(resultSet.getString("COUPON_TITLE"));
+		coupon.setStartDate(resultSet.getString("START_DATE"));
+		coupon.setEndDate(resultSet.getString("END_DATE"));
+		coupon.setAmount(resultSet.getLong("AMOUNT"));
+		coupon.setCouponType(resultSet.getString("COUPON_TYPE"));
+		coupon.setCouponPrice(resultSet.getLong("COUPON_PRICE"));
+		coupon.setCouponMessage(resultSet.getString("COUPON_MESSAGE"));
+		coupon.setCouponImage(resultSet.getString("COUPON_IMAGE"));
+		coupon.setCompanyId(resultSet.getLong("COMPANY_ID"));
+
+		return coupon;
+	}
+
 	public void deleteCouponsFromCustomerCouponByCouponId(long couponId) throws ApplicationException {
 
-
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
 
 		try {
-			Query deleteFromCustomerCoupon = entityManager.createNativeQuery("DELETE FROM customer_coupon WHERE COUPON_ID =:couponId");
-			deleteFromCustomerCoupon.setParameter("couponId", couponId);
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-			deleteFromCustomerCoupon.executeUpdate();
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "DELETE FROM customer_coupon WHERE COUPON_ID = ?";
+
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, couponId);
+			preparedStatement.executeUpdate();
+
 		}
-		catch (Exception e) {
+
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CouponDao, deleteCouponFromCustomerCouponByCouponId(); FAILED");
 		}
 
-
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
 
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED)
 	public void deleteCouponsFromCustomerCouponByCustomerId(long customerId) throws ApplicationException {
 
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+
 		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-			Query deleteFromCoustomerCouponByCustomer = entityManager.createNativeQuery("DELETE FROM customer_coupon WHERE CUSTOMER_ID =:customerId");
-			deleteFromCoustomerCouponByCustomer.setParameter("customerId", customerId);
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "DELETE FROM customer_coupon WHERE CUSTOMER_ID = ?";
 
-			deleteFromCoustomerCouponByCustomer.executeUpdate();
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, customerId);
+			preparedStatement.executeUpdate();
 
 		}
 
-		catch (Exception e) {
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CouponDao, deleteCouponFromCustomerCouponByCustomerId(); FAILED");
 		}
 
-	}
-
-	@Transactional(propagation=Propagation.REQUIRED)
-	public void deleteCoupon(long couponId) throws ApplicationException {
-
-
-
-		try {
-
-			deleteCouponsFromCustomerCouponByCouponId(couponId);
-			CouponEntity coupon = getCoupon(couponId);
-			entityManager.remove(coupon);
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 
-		catch (Exception e) {
+	}
+
+	public void deleteCoupon(long couponId) throws ApplicationException {
+
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+
+		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
+
+			deleteCouponsFromCustomerCouponByCouponId(couponId);
+
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "DELETE FROM coupon WHERE ID = ?";
+
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, couponId);
+			preparedStatement.executeUpdate();
+		}
+
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR, "Error in CouponDao, deleteCoupon(); FAILED");
 		}
 
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED)
-	public void updateCoupon(CouponEntity coupon) throws ApplicationException {
+	public void updateCoupon(Coupon coupon) throws ApplicationException {
+
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
 
 		try {
-			entityManager.merge(coupon);
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
+
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "UPDATE coupon SET COUPON_TITLE=? , START_DATE=?, END_DATE=?, AMOUNT=?, COUPON_TYPE=?, COUPON_MESSAGE=?, COUPON_PRICE=?, COUPON_IMAGE=? WHERE ID =?";
+
+			preparedStatement = connection.prepareStatement(sql);
+
+			preparedStatement.setString(1, coupon.getCouponTitle());
+			preparedStatement.setString(2, coupon.getStartDate());
+			preparedStatement.setString(3, coupon.getEndDate());
+			preparedStatement.setLong(4, coupon.getAmount());
+			preparedStatement.setString(5, coupon.getCouponType());
+			preparedStatement.setString(6, coupon.getCouponMessage());
+			preparedStatement.setLong(7, coupon.getCouponPrice());
+			preparedStatement.setString(8, coupon.getCouponImage());
+			preparedStatement.setLong(9, coupon.getCouponId());
+
+			preparedStatement.executeUpdate();
 		}
 
-		catch (Exception e) {
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR, "Error in CouponDao, updateCoupon(); FAILED");
 		}
+
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+
 	}
 
-	@SuppressWarnings("unchecked")
-	@Transactional(propagation=Propagation.REQUIRED)
-	public List<CouponEntity> getCoupons() throws ApplicationException {
+	public List<Coupon> getCoupons() throws ApplicationException {
+
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+		ResultSet resultSet = null;
+		Coupon coupon = null;
+
+		List<Coupon> coupons = new ArrayList<Coupon>();
 
 		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-			Query getCouponsQuery = entityManager.createNativeQuery("SELECT * FROM coupon");
-			List<CouponEntity> coupons = getCouponsQuery.getResultList();
-			return coupons;
-			
-		} catch (NoResultException e) {
-			return null;
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "SELECT * FROM coupon";
 
-		} catch (Exception e) {
+			preparedStatement = connection.prepareStatement(sql);
+			resultSet = preparedStatement.executeQuery();
+
+			while (resultSet.next()) {
+				coupon = extractCouponFromResultSet(resultSet);
+				coupons.add(coupon);
+			}
+		}
+
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR, "Error in CouponDao, getAllCoupons(); FAILED");
 		}
+
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+		return coupons;
 	}
 
-	@SuppressWarnings("unchecked")
-	@Transactional(propagation=Propagation.REQUIRED)
-	public List<CouponEntity> getCouponsByType(CouponType couponType) throws ApplicationException {
+	public List<Coupon> getCouponsByType(CouponType couponType) throws ApplicationException {
+
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+		ResultSet resultSet = null;
+		Coupon coupon = null;
+
+		List<Coupon> coupons = new ArrayList<Coupon>();
 
 		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-			Query getCouponsByTypeQ = entityManager.createNativeQuery("SELECT * FROM coupon WHERE COUPON_TYPE =:couponType");
-			getCouponsByTypeQ.setParameter("couponType", couponType);
-			return getCouponsByTypeQ.getResultList();
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "SELECT * FROM coupon WHERE COUPON_TYPE = ?";
 
-		} catch (NoResultException e) {
-			return null;
-		} catch (Exception e) {
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, couponType.toString());
+			resultSet = preparedStatement.executeQuery();
+
+			while (resultSet.next()) {
+				coupon = extractCouponFromResultSet(resultSet);
+				coupons.add(coupon);
+			}
+		}
+
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR, "Error in CouponDao, getCouponByType(); FAILED");
 		}
 
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+		return coupons;
 	}
 
-	@SuppressWarnings("unchecked")
-	@Transactional(propagation=Propagation.REQUIRED)
-	public List<CouponEntity> getCouponsUpToPrice(double price) throws ApplicationException {
+	public List<Coupon> getCouponsUpToPrice(double price) throws ApplicationException {
+
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+		ResultSet resultSet = null;
+		Coupon coupon = null;
+
+		List<Coupon> coupons = new ArrayList<Coupon>();
 
 		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-			Query getCouponsUpToPriceQ = entityManager.createNativeQuery("SELECT * FROM coupon WHERE COUPON_PRICE <=:couponPrice");
-			getCouponsUpToPriceQ.setParameter("couponPrice", price);
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "SELECT * FROM coupon WHERE COUPON_PRICE <= ?";
 
-			return getCouponsUpToPriceQ.getResultList();
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setDouble(1, price);
+			resultSet = preparedStatement.executeQuery();
 
-		} catch (NoResultException e) {
-			return null;
-		} catch (Exception e) {
+			while (resultSet.next()) {
+				coupon = extractCouponFromResultSet(resultSet);
+				coupons.add(coupon);
+			}
+		}
+
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CouponDao, getCouponsUpToPrice(); FAILED");
 		}
 
-	}
-
-	@SuppressWarnings("unchecked")
-	@Transactional(propagation=Propagation.REQUIRED)
-	public List<CouponEntity> getCouponUpToDate(String couponEndDate) throws ApplicationException {
-
-		try {
-
-			Query getCouponUpToDateQ = entityManager.createNativeQuery("SELECT * FROM coupon WHERE END_DATE <=:couponEndDate");
-			getCouponUpToDateQ.setParameter("couponEndDate", couponEndDate);
-
-			return getCouponUpToDateQ.getResultList();
-
-		} catch (NoResultException e) {
-			return null;
-		} catch (Exception e) {
-			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
-					"Error in CouponDao, getCouponUpToDate(); FAILED");
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
+		return coupons;
 	}
 
-	@SuppressWarnings("unchecked")
-	@Transactional(propagation=Propagation.REQUIRED)
-	public List<CouponEntity> getCouponsByCustomerId(long customerId) throws ApplicationException {
+	public List<Coupon> getCouponUpToDate(String couponEndDate) throws ApplicationException {
+
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		Coupon coupon = null;
+		List<Coupon> allCouponsByDate = new ArrayList<>();
 
 		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
+			String sql = "SELECT * FROM coupon WHERE END_DATE <= ? ";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, couponEndDate);
+			resultSet = preparedStatement.executeQuery();
 
-			Query getCouponsByCustomerIdQ = entityManager.createNativeQuery("SELECT ID,COUPON_TITLE,START_DATE,END_DATE,AMOUNT,COUPON_TYPE,COUPON_MESSAGE,COUPON_PRICE,COUPON_IMAGE,COMPANY_ID "
+			while (resultSet.next()) {
+				coupon = extractCouponFromResultSet(resultSet);
+				allCouponsByDate.add(coupon);
+			}
+
+		}
+
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+		return allCouponsByDate;
+	}
+
+	public List<Coupon> getCouponsByCustomerId(long customerId) throws ApplicationException {
+
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+		ResultSet resultSet = null;
+		Coupon coupon = null;
+
+		List<Coupon> coupons = new ArrayList<Coupon>();
+
+		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
+
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "SELECT ID,COUPON_TITLE,START_DATE,END_DATE,AMOUNT,COUPON_TYPE,COUPON_MESSAGE,COUPON_PRICE,COUPON_IMAGE,COMPANY_ID "
 					+ " FROM coupon c inner" + " JOIN customer_coupon cc on c.ID = cc.COUPON_ID "
-					+ " WHERE cc.CUSTOMER_ID =:customerIdd ");
-			getCouponsByCustomerIdQ.setParameter("customerIdd", customerId);
+					+ " WHERE cc.CUSTOMER_ID = ? ";
 
-			return getCouponsByCustomerIdQ.getResultList();
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, customerId);
+			resultSet = preparedStatement.executeQuery();
 
-		} catch (NoResultException e) {
-			return null;
-		} catch (Exception e) {
+			while (resultSet.next()) {
+				coupon = extractCouponFromResultSet(resultSet);
+				coupons.add(coupon);
+			}
+		}
+
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CouponDao, getCouponsByCustomerId(); FAILED");
 		}
-	}
 
-	@SuppressWarnings("unchecked")
-	@Transactional(propagation=Propagation.REQUIRED)
-	public List<CouponEntity> getCouponsByCompany(long companyId) throws ApplicationException {
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+		return coupons;
+	}
+	
+	public List<Coupon> getCouponsByCompany(long companyId) throws ApplicationException {
+
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+		ResultSet resultSet = null;
+		Coupon coupon = null;
+
+		List<Coupon> coupons = new ArrayList<Coupon>();
 
 		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-			Query getCouponsByCompanyQ = entityManager.createNativeQuery("SELECT ID,COUPON_TITLE,START_DATE,END_DATE,AMOUNT,COUPON_TYPE,COUPON_MESSAGE,COUPON_PRICE,COUPON_IMAGE,COMPANY_ID "
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "SELECT ID,COUPON_TITLE,START_DATE,END_DATE,AMOUNT,COUPON_TYPE,COUPON_MESSAGE,COUPON_PRICE,COUPON_IMAGE,COMPANY_ID "
 					+ " FROM coupon"
-					+ " WHERE COMPANY_ID =:companyIdd");
-			getCouponsByCompanyQ.setParameter("companyIdd", companyId);
+					+ " WHERE COMPANY_ID = ?";
 
-			return getCouponsByCompanyQ.getResultList();
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, companyId);
+			resultSet = preparedStatement.executeQuery();
 
-		} catch (NoResultException e) {
-			return null;
+			while (resultSet.next()) {
+				coupon = extractCouponFromResultSet(resultSet);
+				coupons.add(coupon);
+			}
+		}
 
-		} catch (Exception e) {
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CouponDao, getCouponsByCustomerId(); FAILED");
 		}
+
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+		return coupons;
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED)
+
 	public boolean isCouponExistByTitle(String couponTitle) throws ApplicationException {
 
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+		ResultSet resultSet = null;
+
 		try {
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-			Query isCouponExistByTitleQ = entityManager.createNativeQuery("SELECT ID FROM coupon WHERE COUPON_TITLE =:couponTitle");
-			isCouponExistByTitleQ.setParameter("couponTitle", couponTitle);
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "SELECT ID FROM coupon WHERE COUPON_TITLE = ? ";
 
-			CouponEntity coupon = (CouponEntity)isCouponExistByTitleQ.getSingleResult();
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, couponTitle);
+			resultSet = preparedStatement.executeQuery();
 
-			if (coupon != null) {
+			if (resultSet.next()) {
 				return true;
-			} else return false;
-
-		} catch (NoResultException e) {
-			return false;
-		} catch (Exception e) {
+			}
+		} catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CouponDao, isCouponExistByTitle(); FAILED");
 		}
+
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+
+		return false;
 	}
 	
-	@Transactional(propagation=Propagation.REQUIRED)
-	public boolean isCouponExist(Long couponId) throws ApplicationException {
+	
+
+	public boolean isCouponExist(long couponId) throws ApplicationException {
+
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+		ResultSet resultSet = null;
 
 		try {
-			CouponEntity coupon = entityManager.find(CouponEntity.class, couponId);
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-			if (coupon != null) {
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "SELECT ID FROM coupon WHERE ID = ? ";
+
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, couponId);
+			resultSet = preparedStatement.executeQuery();
+
+			if (resultSet.next()) {
 				return true;
-			} else return false;
-
-		} catch (NoResultException e) {
-			return false;
-		} catch (Exception e) {
+			}
+		} catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CouponDao, isCouponExistById(); FAILED");
 		}
+
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+
+		return false;
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED)
 	public void deleteExpiredCoupons() throws ApplicationException {
 
-		
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
 
 		try {
-			
-			Query deleteExpiredCouponsQ = entityManager.createNativeQuery("DELETE FROM customer_coupon WHERE COUPON_ID IN (SELECT ID FROM coupon WHERE END_DATE <:endDate1);"
-					+ "DELETE FROM coupon WHERE ID IN (SELECT ID FROM coupon WHERE END_DATE <:endDate2)");
-			deleteExpiredCouponsQ.setParameter("endDate1", DateUtils.getCurrentDate());
-			deleteExpiredCouponsQ.setParameter("endDate2", DateUtils.getCurrentDate());
-			
-			deleteExpiredCouponsQ.executeUpdate();
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
 
-		} catch (Exception e) {
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK/
+			String sql = "DELETE FROM customer_coupon WHERE COUPON_ID IN (SELECT ID FROM coupon WHERE END_DATE < ?);"
+					+ "DELETE FROM coupon WHERE ID IN (SELECT ID FROM coupon WHERE END_DATE < ?";
+
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, DateUtils.getCurrentDate());
+			preparedStatement.setString(2, DateUtils.getCurrentDate());
+			preparedStatement.executeUpdate();
+		}
+
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR,
 					"Error in CouponDao, deleteExpiredCoupons(); FAILED");
 		}
 
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED)
 	public void purchaseCoupon(long customerId, long couponId) throws ApplicationException {
 
+		java.sql.PreparedStatement preparedStatement = null;
+		Connection connection = null;
+
 		try {
-			
-			CustomerCouponEntity customerCoupon = new CustomerCouponEntity();
-			
-			customerCoupon.setCustomerId(customerId);
-			customerCoupon.setCouponId(couponId);
-			
-			entityManager.persist(customerCoupon);
+			// Getting a connection to the DB
+			connection = JdbcUtils.getConnection();
+
+			// Creating a string which will contain the query
+			// PAY ATTENTION - BY USING THE ? (Question marks) WE PREVENT AN SQL INJECTION
+			// ATTACK
+			String sql = "insert into customer_coupon (CUSTOMER_ID,COUPON_ID) values (?,?)";
+
+			preparedStatement = connection.prepareStatement(sql);
+
+			preparedStatement.setLong(1, customerId);
+			preparedStatement.setLong(2, couponId);
+
+			preparedStatement.executeUpdate();
 
 		}
 
-		catch (Exception e) {
+		catch (SQLException e) {
 			throw new ApplicationException(e, ErrorType.SYSTEM_ERROR, "Error in CouponDao, purchaseCoupon(); FAILED");
 		}
 
-	}
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
 
+	}
 }
