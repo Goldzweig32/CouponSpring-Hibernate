@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -45,13 +46,10 @@ public class CouponEntity {
 	
 	@Column(name="COUPON_IMAGE", nullable=false)
 	private String couponImage;
-	
-	@Column(name="COMPANY_ID", nullable=false)
-	private long companyId;
 
-	@ManyToOne
-	@JoinColumn(name = "companyId" , nullable=true)
-	private CompanyEntity company;
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "COMPANY_ID" , nullable=false)
+	private CompanyEntity companyId;
 	
 	public CouponEntity() {
 		super();
@@ -96,7 +94,7 @@ public class CouponEntity {
 		this.couponMessage = couponMessage;
 		this.couponPrice = couponPrice;
 		this.couponImage = couponImage;
-		this.companyId = companyId;
+		this.companyId.setCompanyId(companyId);
 	}
 
 	public Long getCouponId() {
@@ -172,11 +170,11 @@ public class CouponEntity {
 	}
 
 	public Long getCompanyId() {
-		return companyId;
+		return this.companyId.getCompanyId();
 	}
 
 	public void setCompanyId(Long companyId) {
-		this.companyId = companyId;
+		this.companyId.setCompanyId(companyId);
 	}
 
 	@Override
